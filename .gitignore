@@ -6,5 +6,6 @@ __pycache__/
 *$py.class
 
 !data/raw_qr/*
+!data/break_qr/*
 
 
