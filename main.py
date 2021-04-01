@@ -30,10 +30,12 @@ if __name__ == "__main__":
 
         bboxes = util.get_BoundingBox_list(xml['bndboxs'])
 
-        bbs = BoundingBoxesOnImage([BoundingBox(x1=image.shape[1]*0.2,
-                                                x2=image.shape[1]*0.6,
-                                                y1=image.shape[0]*0.5,
-                                                y2=image.shape[0]*0.66)], shape=image.shape)
+        bbs = BoundingBoxesOnImage(bboxes, shape=image.shape)
+
+        # BoundingBox(x1=image.shape[1]*0.2,
+        #                                                 x2=image.shape[1]*0.6,
+        #                                                 y1=image.shape[0]*0.5,
+        #                                                 y2=image.shape[0]*0.66)
 
         imgaug.imshow(bbs.draw_on_image(image, size=2))
 

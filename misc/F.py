@@ -7,7 +7,9 @@ def get_BoundingBox_list(bboxeslist):
     res = []
     for bbox in bboxeslist:
         # x1,x2, y1,y2 ,  VOC Pascal is (x1,y1,x2,y2)
-        res.append(BoundingBox(x1=bbox[0], x2=bbox[2], y1=bbox[1], y2=bbox[3]))
+
+        x1, x2, y1, y2 = float(bbox[0]), float(bbox[2]), float(bbox[1]), float(bbox[3])
+        res.append(BoundingBox(x1=x1, x2=x2, y1=y1, y2=y2))
     return res
 
 
