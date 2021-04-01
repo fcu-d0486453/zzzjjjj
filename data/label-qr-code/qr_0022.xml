@@ -1,0 +1,26 @@
+<annotation>
+	<folder>raw-qr-code</folder>
+	<filename>qr_0022.png</filename>
+	<path>D:\ppppppppppp\!Zhang-Jia Project\program\raw-qr-code\qr_0022.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1000</width>
+		<height>1413</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>QRCode</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>269</xmin>
+			<ymin>771</ymin>
+			<xmax>733</xmax>
+			<ymax>1235</ymax>
+		</bndbox>
+	</object>
+</annotation>
