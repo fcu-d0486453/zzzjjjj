@@ -14,14 +14,18 @@ from imgaug.augmentables.bbs import BoundingBox
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--xml_path', type=str, default=r'D:\ppppppppppp\!Zhang-Jia Project\program\label-qr-code', help='Voc xml folder path')
-parser.add_argument('--img_path', type=str, default=r'C:\Users\mslab\Desktop\git-repo\zjpj\data\raw_qr', help='Raw image folder path')
+parser.add_argument('--xml_path', type=str, default=r'.\data\label-qr-code', help='VOC格式標記檔的資料夾')
+parser.add_argument('--img_path', type=str, default=r'.\data\raw_qr', help='原始QRCODE的資料夾')
+
 args = parser.parse_args()
 
 
 if __name__ == "__main__":
     # xml 的 labeling data
     xml_dlist = VocParser(args.xml_path).get_dlist()
+
+    aa = xml_dlist[0]
+
 
     for xml in xml_dlist:
 
