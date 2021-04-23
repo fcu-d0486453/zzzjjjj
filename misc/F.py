@@ -1,7 +1,8 @@
 from imgaug.augmentables.bbs import BoundingBox
 import numpy as np
+import os
 
-def get_BoundingBox_list(bboxeslist):
+def get_BoundingBoxes(bboxeslist):
     assert np.array(bboxeslist).ndim == 2
 
     res = []
@@ -13,7 +14,22 @@ def get_BoundingBox_list(bboxeslist):
     return res
 
 
+def ensure_folder(folder_path, exists_remake = False):
+    '''
+    確保某個資料夾必定存在，因為會重新建立。
+    '''
+    if os.path.isdir(folder_path):
+        if not exists_remake:
+            return
+        else:
+            pass # TODO: 刪除既有資料夾 and remake.
+
+    else:
+        pass # TODO: 新建該資料夾
+
+
+
 if __name__ == "__main__":
-    res = get_BoundingBox_list([[10,20,60,70]])
+    res = get_BoundingBoxes([[10, 20, 60, 70]])
 
     print("exit")
