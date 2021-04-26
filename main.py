@@ -7,6 +7,7 @@ import imgaug
 import imageio
 import matplotlib.pyplot as plt
 import os
+import misc.F as F
 from misc.F import ensure_folder
 from imgaug.augmentables.bbs import BoundingBoxesOnImage
 from imgaug.augmentables.bbs import BoundingBox
@@ -74,12 +75,21 @@ if __name__ == "__main__":
             for idx in range(args.number):
                 image_aug, bbs_aug = enhancer.augument(xml, get_seq(), args)
 
+                aug_xyxy = []
+                # 處理強化後的 bbs_aug
+                for i in bbs_aug.items:
+                    aug_xyxy.append([i.x1_int, i.y1_int, i.x2_int, i.y2_int])
+
+                aug_xml = "{0}_aug_{1}.xml".format(xml.purefname, str(idx))
+                _xml_path = os.path.join(args.xml_path, xml.purefname)+'.xml'
+                F.rewrite_xyxy(aug_xyxy, _xml_path, logger.get_log_dir(), aug_xml)
+
                 image_after = bbs_aug.draw_on_image(image_aug, size=2, color=[0, 0, 255])
                 imgaug.imshow(image_after)
 
                 aug_img = "{0}_aug_{1}.jpg".format(xml.purefname, str(idx))
-                imageio.imwrite(os.path.join(args.aug_folder, aug_img), image_after)
-                # TODO: 寫 XML
+                imageio.imsave(os.path.join(logger.get_log_dir(), aug_img), image_aug)
+
             # ---- end of one image.
             logger.info("{} 強化完畢!".format(xml.filename))
             break

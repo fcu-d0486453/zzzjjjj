@@ -20,6 +20,7 @@ class VocParser:
             tokens.append(_)
         return tokens
 
+
     def __getitem__(self, idx):
         tree = ET.parse(self.paths[idx])
         res = dict()
@@ -43,12 +44,13 @@ class VocParser:
         res.update({'bndboxs': bndboxs})
 
         class NodeElement:
-            path = res['path']
+            img_path = res['path']
             filename = res['filename']
             purefname = filename.rsplit('.')[0]
             bndboxs = res['bndboxs']
 
         return NodeElement
+
 
 
 if __name__ == "__main__":
