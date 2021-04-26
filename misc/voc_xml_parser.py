@@ -45,6 +45,7 @@ class VocParser:
         class NodeElement:
             path = res['path']
             filename = res['filename']
+            purefname = filename.rsplit('.')[0]
             bndboxs = res['bndboxs']
 
         return NodeElement

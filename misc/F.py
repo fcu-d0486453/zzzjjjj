@@ -1,6 +1,8 @@
 from imgaug.augmentables.bbs import BoundingBox
 import numpy as np
 import os
+import shutil
+
 
 def get_BoundingBoxes(bboxeslist):
     assert np.array(bboxeslist).ndim == 2
@@ -14,22 +16,31 @@ def get_BoundingBoxes(bboxeslist):
     return res
 
 
-def ensure_folder(folder_path, exists_remake = False):
-    '''
+def ensure_folder(folder_path, remake=False, logger=None):
+    """
     確保某個資料夾必定存在，因為會重新建立。
-    '''
+    """
     if os.path.isdir(folder_path):
-        if not exists_remake:
+        if not remake:
+            if logger is not None:
+                logger.info("已經存在 {} 不須建立".format(folder_path))
             return
         else:
-            pass # TODO: 刪除既有資料夾 and remake.
-
+            if logger is not None:
+                logger.warning("已經存在 {}".format(folder_path))
+            shutil.rmtree(folder_path)
+            if logger is not None:
+                logger.warning("已刪除 {} 資料夾".format(folder_path))
+            os.makedirs(folder_path, 0x755)
+            if logger is not None:
+                logger.info("已重新建立 {} 資料夾".format(folder_path))
     else:
-        pass # TODO: 新建該資料夾
-
+        os.makedirs(folder_path, 0x755)
+        if logger is not None:
+            logger.info("已經建立 {} 資料夾".format(folder_path))
 
 
 if __name__ == "__main__":
-    res = get_BoundingBoxes([[10, 20, 60, 70]])
+    import logger
 
-    print("exit")
+    Logger = logger.Logger('./')
