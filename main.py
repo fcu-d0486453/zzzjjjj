@@ -21,9 +21,9 @@ logger = logger.Logger(level=logger.logging_INFO)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--xml_path', type=str, default=r'.\data\label-qr-code', help='VOC格式標記檔的資料夾')
-parser.add_argument('--img_path', type=str, default=r'.\data\raw_qr', help='原始QRCODE的資料夾')
-parser.add_argument('--aug_folder', type=str, default=r'.\data\augumented', help='放置被強化過後的資料夾')
+parser.add_argument('--xml_path', type=str, default=r'./data/label-qr-code', help='VOC格式標記檔的資料夾')
+parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
+parser.add_argument('--aug_folder', type=str, default=r'./data/augumented', help='放置被強化過後的資料夾')
 parser.add_argument('--number', type=int, default=3, help="將一張圖強化幾次")
 
 args = parser.parse_args()

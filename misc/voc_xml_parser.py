@@ -8,7 +8,10 @@ class VocParser:
     path: xml folder.
     """
     def __init__(self, path):
-        assert os.path.exists(path)
+
+        if not os.path.exists(path):  # 確保 xml 存在。
+            raise ValueError("路徑 {} 不存在".format(path))
+
         self.paths = glob.glob(os.path.join(path.rstrip(os.path.sep))+os.path.sep+'*.xml')
 
     def get_dlist(self):

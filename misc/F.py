@@ -81,11 +81,11 @@ def ensure_folder(folder_path, remake=False, logger=None):
             shutil.rmtree(folder_path)
             if logger is not None:
                 logger.warning("已刪除 {} 資料夾".format(folder_path))
-            os.makedirs(folder_path, 0x755)
+            os.makedirs(folder_path, 0o755)
             if logger is not None:
                 logger.info("已重新建立 {} 資料夾".format(folder_path))
     else:
-        os.makedirs(folder_path, 0x755)
+        os.makedirs(folder_path, 0o755)
         if logger is not None:
             logger.info("已經建立 {} 資料夾".format(folder_path))
 
