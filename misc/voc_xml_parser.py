@@ -47,6 +47,7 @@ class VocParser:
         res.update({'bndboxs': bndboxs})
 
         class NodeElement:
+            xml_path = self.paths[idx]
             img_path = res['path']
             filename = res['filename']
             purefname = filename.rsplit('.')[0]

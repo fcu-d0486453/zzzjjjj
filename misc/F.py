@@ -1,3 +1,4 @@
+import misc.logger as logger
 from imgaug.augmentables.bbs import BoundingBox
 import numpy as np
 import os
@@ -6,6 +7,20 @@ import xml.etree.ElementTree as ET
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 import imageio
 import imgaug
+from PIL import Image
+from glob import glob
+import os
+
+
+def img_folder_chk(dir, format=['png', 'jpeg', 'jpg'], logger=None):
+    noi = len(glob(os.path.join(dir, '*.*')))
+    fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in format ]
+
+    for imtype in fname:
+        for img_p in imtype:
+            Image.open(img_p).convert('RGB').save(img_p)
+    if logger is not None:
+        logger.info("image folder check successfully!")
 
 def show_bbox_on_image(xml_path, img_path, save=False):
 
@@ -30,7 +45,7 @@ def show_bbox_on_image(xml_path, img_path, save=False):
     if save:
         imageio.imsave(os.path.join(os.getcwd(), 'test_show.jpg'), bbs.draw_on_image(image, size=2))
 
-def rewrite_xyxy(xyxy, xml_path, rewrite_dir, rewrite_fname, label=['xmin', 'ymin', 'xmax', 'ymax']):
+def rewrite_xyxy2xml(xyxy, xml_path, rewrite_dir, rewrite_fname, label=['xmin', 'ymin', 'xmax', 'ymax']):
     """
     注意這目前只適用於單一物件的偵測使用。多目標的他不會管誰是誰就直接取代。
 
