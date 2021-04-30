@@ -24,8 +24,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--xml_path', type=str, default=r'./data/label-qr-code', help='VOC格式標記檔的資料夾')
 parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
 parser.add_argument('--aug_folder', type=str, default=r'./data/augumented', help='放置被強化過後的資料夾')
-parser.add_argument('--number', type=int, default=3, help="將一張圖強化幾次")
+parser.add_argument('--number', type=int, default=10, help="將一張圖強化幾次")
 parser.add_argument('--channel-check', action='store_true', help="當 img_path 內的圖片有可能出現alpha通道時，會先處理該folder內的所有圖片。")
+parser.add_argument('--verbose', action='store_true', help="印出一堆訊息")
 args = parser.parse_args()
 
 if args.channel_check:
@@ -56,9 +57,9 @@ if __name__ == "__main__":
             for idx in tqdm(range(args.number), leave=False):  # 單張圖片的強化數量
 
                 # 取得對應xml於的image。
-                seq = enhancer.get_seq()
+                seq = enhancer.get_seq(random_order=True, random_pick=False, pick=2)
+                seq = seq.remove_out_of_image().clip_out_of_image()  # 移除超出邊界框，與切平邊界框
                 image_aug, bbs_aug = enhancer.augument(xml, seq, args)
-                print(seq.get())
                 aug_xyxy = []
                 # 處理強化後的 bbs_aug
                 for i in bbs_aug.items:
@@ -78,7 +79,9 @@ if __name__ == "__main__":
             logger.info("{} 強化完畢!".format(xml.filename))
             # break
 
-        print("exit")
+        print(f"logging dir: {logger.get_log_dir()}. (success exit!)")
+
+        F.dataset_split(logger.get_log_dir())
 
     if test2:
-        pass
+        F.dataset_split(logger.get_log_dir())

@@ -10,7 +10,69 @@ import imgaug
 from PIL import Image
 from glob import glob
 import os
+import random
 
+def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg'],
+                  labels_format=['xml'], train_dir='train', vaild_dir='vaild', args=None):
+    train_subset_dir = os.path.join(dir, train_dir)
+    vaild_subset_dir = os.path.join(dir, vaild_dir)
+    ensure_folder(train_subset_dir, remake=True)
+    ensure_folder(os.path.join(train_subset_dir, "images"))
+    ensure_folder(os.path.join(train_subset_dir, "labels"))
+    ensure_folder(vaild_subset_dir, remake=True)
+    ensure_folder(os.path.join(vaild_subset_dir, "images"))
+    ensure_folder(os.path.join(vaild_subset_dir, "labels"))
+    noi = len(glob(os.path.join(dir, '*.*')))  # 取得所有檔案
+    flatten = lambda t: [item for sublist in t for item in sublist]
+
+    all_format = flatten([image_format, labels_format])
+    fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in all_format]  # 篩選副檔名為 format的 檔名。
+
+    all_avali_file = list(set([item.rsplit('.')[0] for item in flatten(fname)]))  # 蒐集不同檔名的名稱
+    none_repeat = len(all_avali_file)
+
+    if args is not None and args.verbose:
+        print(f"image 使用副檔名: {image_format}")
+        print(f"label 使用副檔名: {labels_format}")
+        print(f"不重複檔名: {all_avali_file}")
+        print(f"不重複檔名數量: {none_repeat}")
+
+    train_pick = round(none_repeat * train)
+    valid_pick = round(none_repeat * valid)
+    # 不想管的話就直接註解掉 assert。
+    assert train_pick + valid_pick == none_repeat  # 用意: 一箱蘋果隨意分兩包，兩包數量要等同一箱。
+    random.shuffle(all_avali_file)
+    train_sub = all_avali_file[0:train_pick]
+    valid_sub = all_avali_file[train_pick:]
+    if args is not None and args.verbose:
+        print("train {}筆: {}".format(len(train_sub), train_sub))
+        print("valid {}筆: {}".format(len(valid_sub), valid_sub))
+    else:
+        print("train {}筆".format(len(train_sub)))
+        print("valid {}筆".format(len(valid_sub)))
+    print("共 {} 筆.".format(len(train_sub)+len(valid_sub)))
+
+    for fn in train_sub:
+        for sub_n in image_format:
+            target_f = fn+f'.{sub_n}'
+            if os.path.isfile(target_f):
+                shutil.copy2(src=target_f, dst=train_subset_dir)
+                # print(f"{target_f} --copy2--> {train_subset_dir}")
+    print("已將 train image子集 檔案複製至 {}".format(train_subset_dir))
+    for fn in train_sub:
+        for sub_n in image_format:
+            target_f = fn+f'.{sub_n}'
+            if os.path.isfile(target_f):
+                shutil.copy2(src=target_f, dst=train_subset_dir)
+    print("已將 train label子集 檔案複製至 {}".format(train_subset_dir))
+    # TODO: 將 分類的圖片再加以分到 label 與 images 資料夾內。
+    for fn in valid_sub:
+        for sub_n in labels_format:
+            target_f = fn+f'.{sub_n}'
+            if os.path.isfile(target_f):
+                shutil.copy2(src=os.path.join(fn, target_f), dst=vaild_subset_dir)
+                # print(f"{target_f} --copy2--> {vaild_subset_dir}")
+    print("已將 vaild子集 檔案複製至 {}".format(vaild_subset_dir))
 
 def img_folder_chk(dir, format=['png', 'jpeg', 'jpg'], logger=None):
     noi = len(glob(os.path.join(dir, '*.*')))
