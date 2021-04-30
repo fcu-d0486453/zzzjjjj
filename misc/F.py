@@ -13,22 +13,31 @@ import os
 import random
 
 def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg'],
-                  labels_format=['xml'], train_dir='train', vaild_dir='vaild', args=None):
+                  labels_format=['xml'], train_dir='train', valid_dir='vaild', args=None):
+    # train
     train_subset_dir = os.path.join(dir, train_dir)
-    vaild_subset_dir = os.path.join(dir, vaild_dir)
     ensure_folder(train_subset_dir, remake=True)
-    ensure_folder(os.path.join(train_subset_dir, "images"))
-    ensure_folder(os.path.join(train_subset_dir, "labels"))
-    ensure_folder(vaild_subset_dir, remake=True)
-    ensure_folder(os.path.join(vaild_subset_dir, "images"))
-    ensure_folder(os.path.join(vaild_subset_dir, "labels"))
-    noi = len(glob(os.path.join(dir, '*.*')))  # 取得所有檔案
+    train_image_dir = os.path.join(train_subset_dir, "images")
+    train_labels_dir =os.path.join(train_subset_dir, "labels")
+    ensure_folder(train_image_dir)
+    ensure_folder(train_labels_dir)
+    # vaild
+    valid_subset_dir = os.path.join(dir, valid_dir)
+    ensure_folder(valid_subset_dir, remake=True)
+    valid_image_dir = os.path.join(valid_subset_dir, "images")
+    valid_labels_dir = os.path.join(valid_subset_dir, "labels")
+    ensure_folder(valid_image_dir)
+    ensure_folder(valid_labels_dir)
+
+    # noi = len(glob(os.path.join(dir, '*.*')))  # 取得所有檔案
     flatten = lambda t: [item for sublist in t for item in sublist]
 
     all_format = flatten([image_format, labels_format])
-    fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in all_format]  # 篩選副檔名為 format的 檔名。
+    # 篩選副檔名為 format的 檔名。
+    fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in all_format]
 
-    all_avali_file = list(set([item.rsplit('.')[0] for item in flatten(fname)]))  # 蒐集不同檔名的名稱
+    # 蒐集不同檔名的名稱，只取名稱。
+    all_avali_file = list(set([item.rsplit('.')[0] for item in flatten(fname)]))
     none_repeat = len(all_avali_file)
 
     if args is not None and args.verbose:
@@ -52,27 +61,35 @@ def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg']
         print("valid {}筆".format(len(valid_sub)))
     print("共 {} 筆.".format(len(train_sub)+len(valid_sub)))
 
+    # train image
     for fn in train_sub:
         for sub_n in image_format:
             target_f = fn+f'.{sub_n}'
             if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=train_subset_dir)
-                # print(f"{target_f} --copy2--> {train_subset_dir}")
-    print("已將 train image子集 檔案複製至 {}".format(train_subset_dir))
+                shutil.copy2(src=target_f, dst=train_image_dir)
+    print("已將 train image子集 檔案複製至 {}".format(train_image_dir))
+    # train label
     for fn in train_sub:
-        for sub_n in image_format:
-            target_f = fn+f'.{sub_n}'
-            if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=train_subset_dir)
-    print("已將 train label子集 檔案複製至 {}".format(train_subset_dir))
-    # TODO: 將 分類的圖片再加以分到 label 與 images 資料夾內。
-    for fn in valid_sub:
         for sub_n in labels_format:
             target_f = fn+f'.{sub_n}'
             if os.path.isfile(target_f):
-                shutil.copy2(src=os.path.join(fn, target_f), dst=vaild_subset_dir)
-                # print(f"{target_f} --copy2--> {vaild_subset_dir}")
-    print("已將 vaild子集 檔案複製至 {}".format(vaild_subset_dir))
+                shutil.copy2(src=target_f, dst=train_labels_dir)
+    print("已將 train label子集 檔案複製至 {}".format(train_labels_dir))
+
+    # valid image
+    for fn in valid_sub:
+        for sub_n in image_format:
+            target_f = fn + f'.{sub_n}'
+            if os.path.isfile(target_f):
+                shutil.copy2(src=target_f, dst=valid_image_dir)
+    print("已將 valid image子集 檔案複製至 {}".format(valid_image_dir))
+    # valid label
+    for fn in valid_sub:
+        for sub_n in labels_format:
+            target_f = fn + f'.{sub_n}'
+            if os.path.isfile(target_f):
+                shutil.copy2(src=target_f, dst=valid_labels_dir)
+    print("已將 valid label子集 檔案複製至 {}".format(valid_labels_dir))
 
 def img_folder_chk(dir, format=['png', 'jpeg', 'jpg'], logger=None):
     noi = len(glob(os.path.join(dir, '*.*')))
@@ -116,13 +133,72 @@ def rewrite_xyxy2xml(xyxy, xml_path, rewrite_dir, rewrite_fname, label=['xmin', 
     # xyxy: default: ['xmin', 'ymin', 'xmax', 'ymax']。
 
     # label: !!!DEPENDENT on !!! xml label format.
+
+    # 處理節點範例如下
+    <object>
+		<name>QRCode</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>352</xmin>
+			<ymin>321</ymin>
+			<xmax>478</xmax>
+			<ymax>501</ymax>
+		</bndbox>
+	</object>
+	"""
+    # DEPENDENT!!! string
+    def get_value_object_node(xmin, ymin, xmax, ymax):
+        n_object = ET.Element('object')
+        name = ET.SubElement(n_object, 'name')
+        pose = ET.SubElement(n_object, 'pose')
+        truncated = ET.SubElement(n_object, 'truncated')
+        difficult = ET.SubElement(n_object, 'difficult')
+        bndbox = ET.SubElement(n_object, 'bndbox')
+        xmin_n = ET.SubElement(bndbox, 'xmin')
+        ymin_n = ET.SubElement(bndbox, 'ymin')
+        xmax_n = ET.SubElement(bndbox, 'xmax')
+        ymax_n = ET.SubElement(bndbox, 'ymax')
+
+        name.text = 'QRCode'
+        pose.text = 'Unspecified'
+        truncated.text = '0'
+        difficult.text = '0'
+        xmin_n.text = '0'#str(xmin)
+        ymin_n.text = '0'#str(ymin)
+        xmax_n.text = '0'#str(xmax)
+        ymax_n.text = '0'#str(ymax)
+        return n_object
+
+    ensure_folder(rewrite_dir)
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+
+    for object_node in root.findall('object'):
+        root.remove(object_node)
+
+    for xmin, ymin, xmax, ymax in xyxy:
+        nn = get_value_object_node(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
+        root.append(nn)  # 在 最後一個 node 後面添加新的節點
+
+    tree.write(os.path.join(rewrite_dir, rewrite_fname))
+
+def Deprecated_rewrite_xyxy2xml(xyxy, xml_path, rewrite_dir, rewrite_fname, label=['xmin', 'ymin', 'xmax', 'ymax']):
+    """
+    注意這目前只適用於單一物件的偵測使用。多目標的他不會管誰是誰就直接取代。
+
+    將某一個xml的所有 object 的 bbox 都帶換掉
+
+    # xyxy: default: ['xmin', 'ymin', 'xmax', 'ymax']。
+
+    # label: !!!DEPENDENT on !!! xml label format.
     """
     ensure_folder(rewrite_dir)
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    EACH_LABEL_ELEMENT = len(label)
-    # TODO: 當數量不一樣時的防呆，xml 出錯 or 程式員給錯數量的 xyxy。 xyxy總數不符合 object標籤數量。
+
 
     for label_idx, clabel in enumerate(label):  # 迭代 label參數
         for idx, val in enumerate(root.iter(clabel)):  # 迭代 xml 標籤
@@ -169,6 +245,7 @@ def ensure_folder(folder_path, remake=False, logger=None):
 
 if __name__ == "__main__":
 
-    show_bbox_on_image(r"D:\Git\zjpj\log_XD\20210427_0231\qr_0009_aug_1.xml",
-                       r"D:\Git\zjpj\log_XD\20210427_0231\qr_0009_aug_1.jpg", save=True)
+    rewrite_xyxy2xml(xyxy = [[1,2,3,4],[5,6,7,8]], xml_path=r'D:\Git\zjpj\data\label-qr-code\qr_0005.xml',
+                     rewrite_dir = './', rewrite_fname='remade.xml')
+
 
