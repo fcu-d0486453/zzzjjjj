@@ -91,6 +91,16 @@ def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg']
                 shutil.copy2(src=target_f, dst=valid_labels_dir)
     print("已將 valid label子集 檔案複製至 {}".format(valid_labels_dir))
 
+
+def get_image_filenames(dir, format=['png', 'jpeg', 'jpg'], full_path=True):
+    flatten = lambda dl: [e for sub in dl for e in sub]
+    res = flatten([glob(os.path.join(dir, f'*.{fm}')) for fm in format])
+    if full_path:
+        return res
+    else:
+        return [_.replace('\\', ' ').replace('/', ' ').replace('.', ' ').split(' ')[-2] for _ in res]
+
+
 def img_folder_chk(dir, format=['png', 'jpeg', 'jpg'], logger=None):
     noi = len(glob(os.path.join(dir, '*.*')))
     fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in format ]
@@ -101,7 +111,34 @@ def img_folder_chk(dir, format=['png', 'jpeg', 'jpg'], logger=None):
     if logger is not None:
         logger.info("image folder check successfully!")
 
-def show_bbox_on_image(xml_path, img_path, save=False):
+
+def show_bbox_on_image(bboxs, img_path, mode='xyxy', save=True):
+
+    image = imageio.imread(img_path)
+
+    xyxy = []
+    if mode.lower()=='xyxy':
+        for x0, y0, x1, y1 in bboxs:
+            xyxy.append(BoundingBox(int(x0), int(y0), int(x1), int(y1)))
+    elif mode.lower()=='xywh':
+        w, h = image.shape[1::-1]
+        for xc, yc, bw, bh in bboxs:
+            xmin = float(xc) * w - (w/2) * float(bw)
+            ymin = float(yc) * h - (h/2) * float(bh)
+            xmax = float(xc) * w + (w/2) * float(bw)
+            ymax = float(yc) * h + (h/2) * float(bh)
+            xyxy.append(BoundingBox(int(xmin), int(ymin), int(xmax), int(ymax)))
+    else:
+        raise ValueError(f'Not support mode "{mode}". Consider use xyxy(voc format) or xywh(yolo format).')
+    bbs = BoundingBoxesOnImage(xyxy, shape=image.shape)
+
+    bbs.draw_on_image(image, size=2)
+    imgaug.imshow(bbs.draw_on_image(image, size=2))
+    if save:
+        imageio.imsave(os.path.join(os.getcwd(), 'test_show.jpg'), bbs.draw_on_image(image, size=2))
+
+
+def show_bbox_on_image_xmlver(xml_path, img_path, save=False):
 
     image = imageio.imread(img_path)
 
@@ -245,7 +282,6 @@ def ensure_folder(folder_path, remake=False, logger=None):
 
 if __name__ == "__main__":
 
-    rewrite_xyxy2xml(xyxy = [[1,2,3,4],[5,6,7,8]], xml_path=r'D:\Git\zjpj\data\label-qr-code\qr_0005.xml',
-                     rewrite_dir = './', rewrite_fname='remade.xml')
+    show_bbox_on_image('')
 
 

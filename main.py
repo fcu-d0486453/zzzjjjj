@@ -16,12 +16,14 @@ from imageEnhance import ImEnhance
 import misc.logger as loggerr
 from random import randint, uniform
 from tqdm import tqdm
+from misc.myparser import YoloLabelReader
+from glob import glob
 
 logger = loggerr.Logger(level=logger.logging_INFO)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--xml_path', type=str, default=r'./data/label-qr-code', help='VOC格式標記檔的資料夾')
+parser.add_argument('--label_path', type=str, default=r'./data/label-qr-code', help='標記檔的資料夾')
 parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
 parser.add_argument('--aug_folder', type=str, default=r'./data/augumented', help='放置被強化過後的資料夾')
 parser.add_argument('--number', type=int, default=1, help="將一張圖強化幾次")
@@ -41,12 +43,28 @@ logger.info("========================================")
 
 
 if __name__ == "__main__":
-    test1 = True
+    test0 = True
+    test1 = False
     test2 = False
 
+    if test0:
+        label_reader = YoloLabelReader(label_dir=args.label_path, image_dir=args.img_path)
+        fn_list = F.get_image_filenames(args.img_path, full_path=False)
+        enhancer = ImEnhance()
+        for fn in ['qr_0003']:  # fn_list
+            seq = enhancer.get_seq(random_order=True, random_pick=False, pick=2)
+            label_x = label_reader[fn]
+            image_aug, bbs_aug = enhancer.augument(label_x, seq, args)
+            # TODO : 確保每次 augument時內部的東東是隨機的。
+            # TODO : 縮小他!!
+            print(bbs_aug)
+            image_after_aug = bbs_aug.draw_on_image(image_aug, size=5, color=[255, 0, 0])
+            imageio.imsave('after_aug.jpg', image_after_aug)
+            break
+
     if test1:
-        # xml 的 labeling data
-        xml_dlist = VocParser(args.xml_path).get_dlist()
+        # labeling data
+        annotation_data = VocParser(args.label_path).get_dlist()
 
         enhancer = ImEnhance()
 
