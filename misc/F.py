@@ -280,6 +280,17 @@ def ensure_folder(folder_path, remake=False, logger=None):
             logger.info("已經建立 {} 資料夾".format(folder_path))
 
 
+def xyxy2xywh(xyxy, w, h):
+    assert np.array(xyxy).ndim == 2
+    xywh = []
+    for xmin, ymin, xmax, ymax in xyxy:
+        xc = (xmin + xmax) / 2 * (1 / w)
+        yc = (ymin + ymax) / 2 * (1 / h)
+        ww = (xmax - xmin) / w
+        hh = (ymax - ymin) / h
+        xywh.append(round(xc), round(yc), round(ww), round(hh))
+    return xywh
+
 if __name__ == "__main__":
 
     show_bbox_on_image('')

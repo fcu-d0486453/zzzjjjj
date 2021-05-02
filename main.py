@@ -50,17 +50,19 @@ if __name__ == "__main__":
     if test0:
         label_reader = YoloLabelReader(label_dir=args.label_path, image_dir=args.img_path)
         fn_list = F.get_image_filenames(args.img_path, full_path=False)
-        enhancer = ImEnhance()
-        for fn in ['qr_0003']:  # fn_list
-            seq = enhancer.get_seq(random_order=True, random_pick=False, pick=2)
-            label_x = label_reader[fn]
-            image_aug, bbs_aug = enhancer.augument(label_x, seq, args)
-            # TODO : 確保每次 augument時內部的東東是隨機的。
-            # TODO : 縮小他!!
-            print(bbs_aug)
-            image_after_aug = bbs_aug.draw_on_image(image_aug, size=5, color=[255, 0, 0])
-            imageio.imsave('after_aug.jpg', image_after_aug)
-            break
+        enhancer = ImEnhance(random_order=True, random_pick=True, pick=2)
+
+        for idx in tqdm(range(args.number), leave=False):  # 單張圖片的強化數量
+            for fn in fn_list:  # ['qr_0009', 'qr_0010']:  # fn_list
+                label_x = label_reader[fn]
+                (image_aug, bbs_aug), params = enhancer.augument(label_x)
+                print(int(params['rotation']))
+                continue
+                # TODO : 確保每次 augument時內部的東東是隨機的。
+                # TODO : 縮小他!!
+                print(bbs_aug)
+                image_after_aug = bbs_aug.draw_on_image(image_aug, size=5, color=[255, 0, 0])
+                imageio.imsave('after_aug.jpg', image_after_aug)
 
     if test1:
         # labeling data
