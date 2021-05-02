@@ -25,16 +25,22 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--label_path', type=str, default=r'./data/label-qr-code', help='標記檔的資料夾')
 parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
-parser.add_argument('--aug_folder', type=str, default=r'./data/augumented', help='放置被強化過後的資料夾')
 parser.add_argument('--number', type=int, default=1, help="將一張圖強化幾次")
 parser.add_argument('--channel-check', action='store_true', help="當 img_path 內的圖片有可能出現alpha通道時，會先處理該folder內的所有圖片。")
 parser.add_argument('--verbose', action='store_true', help="印出一堆訊息")
+parser.add_argument('--show_augment', action='store_true', help="強化的結果印在圖片上")
 args = parser.parse_args()
+
+show_augment_dir_name = "show_augment"
+
+# HARDCODE
+args.show_augment = True
 
 if args.channel_check:
     F.img_folder_chk(dir=args.img_path, logger=logger)
 
-ensure_folder(args.aug_folder)
+if args.show_augment:
+    ensure_folder(os.path.join(logger.get_log_dir(), show_augment_dir_name))
 
 logger.info("================= args =================")
 for k, v in args.__dict__.items():
@@ -50,19 +56,24 @@ if __name__ == "__main__":
     if test0:
         label_reader = YoloLabelReader(label_dir=args.label_path, image_dir=args.img_path)
         fn_list = F.get_image_filenames(args.img_path, full_path=False)
-        enhancer = ImEnhance(random_order=True, random_pick=True, pick=2)
+        enhancer = ImEnhance()
 
-        for idx in tqdm(range(args.number), leave=False):  # 單張圖片的強化數量
-            for fn in fn_list:  # ['qr_0009', 'qr_0010']:  # fn_list
+        pbar = tqdm(fn_list)
+        for fn in pbar:  # ['qr_0009', 'qr_0010']:  # fn_list
+            for idx in range(args.number):  # 單張圖片的強化數量
                 label_x = label_reader[fn]
                 (image_aug, bbs_aug), params = enhancer.augument(label_x)
-                print(int(params['rotation']))
-                continue
-                # TODO : 確保每次 augument時內部的東東是隨機的。
-                # TODO : 縮小他!!
-                print(bbs_aug)
-                image_after_aug = bbs_aug.draw_on_image(image_aug, size=5, color=[255, 0, 0])
-                imageio.imsave('after_aug.jpg', image_after_aug)
+                fn = fn+f'_{idx}'
+                pbar.set_description("處理圖片 {} r={}".format(fn, params['rotation']))
+                im_path = os.path.join(logger.get_log_dir(), f'{fn}.jpg')  # ..
+                if args.show_augment:
+                    image_after_aug = bbs_aug.draw_on_image(image_aug, size=5, color=[255, 0, 0])
+                    rd = params['rotation']
+                    img_aug_path = os.path.join(logger.get_log_dir(), show_augment_dir_name, f'{fn}_r_{rd}.jpg') #..
+                    imageio.imsave(img_aug_path, im=image_after_aug)
+                F.write_label_and_image2(im_path, image_aug, fn, bbs_aug, logger)
+
+
 
     if test1:
         # labeling data

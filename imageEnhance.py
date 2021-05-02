@@ -74,6 +74,9 @@ class ImEnhance:
 
 
         """
+        if self.random_pick == True:
+            raise NotImplementedError("因為要採集旋轉資訊，故不可以隨機挑。")
+
         if not self.random_pick:
             if self.random_order:
                 return iaa.Sequential(self.enhance_event, random_order=self.random_order)

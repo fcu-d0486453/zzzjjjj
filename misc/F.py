@@ -11,6 +11,7 @@ from PIL import Image
 from glob import glob
 import os
 import random
+import imageio
 
 def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg'],
                   labels_format=['xml'], train_dir='train', valid_dir='vaild', args=None):
@@ -281,15 +282,30 @@ def ensure_folder(folder_path, remake=False, logger=None):
 
 
 def xyxy2xywh(xyxy, w, h):
-    assert np.array(xyxy).ndim == 2
+    assert len(xyxy) == 4
     xywh = []
-    for xmin, ymin, xmax, ymax in xyxy:
-        xc = (xmin + xmax) / 2 * (1 / w)
-        yc = (ymin + ymax) / 2 * (1 / h)
-        ww = (xmax - xmin) / w
-        hh = (ymax - ymin) / h
-        xywh.append(round(xc), round(yc), round(ww), round(hh))
-    return xywh
+    xmin, ymin, xmax, ymax = xyxy[0],xyxy[1],xyxy[2],xyxy[3],
+
+    xc = (xmin + xmax) / 2 * (1 / w)
+    yc = (ymin + ymax) / 2 * (1 / h)
+    ww = (xmax - xmin) / w
+    hh = (ymax - ymin) / h
+
+    return [xc, yc, ww, hh]
+
+
+def write_label_and_image2(img_save_path, image, fn, bbs, logger):
+    imageio.imsave(img_save_path, image)
+    w, h = image.shape[1::-1]
+    logger.info(f"Image '{img_save_path}' saved.")
+    tmp_xywh = []
+    for bb in bbs:
+        xywh = xyxy2xywh([bb.x1_int, bb.y1_int, bb.x2_int, bb.y2_int], w, h)
+        xywh = ['{:.6f}'.format(n) for n in xywh]
+        tmp_xywh.append("0 " + " ".join(xywh)+'\n')
+
+    with open(os.path.join(logger.get_log_dir(), fn+'.txt'), 'w') as fp:
+        fp.writelines(tmp_xywh)
 
 if __name__ == "__main__":
 
