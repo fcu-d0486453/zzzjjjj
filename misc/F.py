@@ -12,9 +12,12 @@ from glob import glob
 import os
 import random
 import imageio
+import math
+
 
 def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg'],
-                  labels_format=['xml'], train_dir='train', valid_dir='vaild', args=None):
+                  labels_format=['txt'], train_dir='train', valid_dir='vaild',
+                  args=None, _logger=None):
     # train
     train_subset_dir = os.path.join(dir, train_dir)
     ensure_folder(train_subset_dir, remake=True)
@@ -30,30 +33,35 @@ def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg']
     ensure_folder(valid_image_dir)
     ensure_folder(valid_labels_dir)
 
-    # noi = len(glob(os.path.join(dir, '*.*')))  # 取得所有檔案
     flatten = lambda t: [item for sublist in t for item in sublist]
 
-    all_format = flatten([image_format, labels_format])
-    # 篩選副檔名為 format的 檔名。
-    fname = [glob(os.path.join(dir, f'*.{fm}')) for fm in all_format]
+    _tmp = flatten([glob(os.path.join(dir, f'*.{sn}')) for sn in image_format])
+    all_img_fn = [_.replace('/', ' ')
+                  .replace('\\', ' ')
+                  .replace('.', ' ')
+                  .split(' ')[-2] for _ in _tmp]
 
-    # 蒐集不同檔名的名稱，只取名稱。
-    all_avali_file = list(set([item.rsplit('.')[0] for item in flatten(fname)]))
-    none_repeat = len(all_avali_file)
+    all_number = len(all_img_fn)
+    train_number = int(math.floor(all_number * train))
+    valid_number = int(math.ceil(all_number * valid))
+
+    if train_number + valid_number != all_number:
+        print(f'train_number:{train_number} + valid_number{valid_number} != '
+              f'all_number:{all_number}, 並不相等。')
+        _offset = (train_number+valid_number-all_number)
+        valid_number = int(valid_number - _offset)
+        print("調整為:")
+        print("train_number:", train_number)
+        print("valid_number:", valid_number)
 
     if args is not None and args.verbose:
         print(f"image 使用副檔名: {image_format}")
         print(f"label 使用副檔名: {labels_format}")
-        print(f"不重複檔名: {all_avali_file}")
-        print(f"不重複檔名數量: {none_repeat}")
 
-    train_pick = round(none_repeat * train)
-    valid_pick = round(none_repeat * valid)
-    # 不想管的話就直接註解掉 assert。
-    assert train_pick + valid_pick == none_repeat  # 用意: 一箱蘋果隨意分兩包，兩包數量要等同一箱。
-    random.shuffle(all_avali_file)
-    train_sub = all_avali_file[0:train_pick]
-    valid_sub = all_avali_file[train_pick:]
+    random.shuffle(all_img_fn)
+    train_sub = all_img_fn[0:train_number]
+    valid_sub = all_img_fn[train_number:]
+
     if args is not None and args.verbose:
         print("train {}筆: {}".format(len(train_sub), train_sub))
         print("valid {}筆: {}".format(len(valid_sub), valid_sub))
@@ -62,36 +70,46 @@ def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg']
         print("valid {}筆".format(len(valid_sub)))
     print("共 {} 筆.".format(len(train_sub)+len(valid_sub)))
 
-    # train image
+    print_logger = None
+    if _logger is not None:
+        print_logger = _logger.info
+    else:
+        print_logger = NOTHING
+
+    # moving train subset
     for fn in train_sub:
         for sub_n in image_format:
-            target_f = fn+f'.{sub_n}'
-            if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=train_image_dir)
-    print("已將 train image子集 檔案複製至 {}".format(train_image_dir))
-    # train label
-    for fn in train_sub:
+            target_f = fn + f'.{sub_n}'
+            full_path = os.path.join(dir, target_f)
+            if os.path.isfile(full_path):
+                shutil.copy2(src=full_path, dst=train_image_dir)
+                print_logger("'{}' -- copy2 --> '{}'".format(full_path, train_image_dir))
         for sub_n in labels_format:
-            target_f = fn+f'.{sub_n}'
-            if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=train_labels_dir)
-    print("已將 train label子集 檔案複製至 {}".format(train_labels_dir))
-
+            target_f = fn + f'.{sub_n}'
+            full_path = os.path.join(dir, target_f)
+            if os.path.isfile(full_path):
+                shutil.copy2(src=full_path, dst=train_labels_dir)
+                print_logger("'{}' -- copy2 --> '{}'".format(full_path, train_labels_dir))
+    print("已將 train 子集 複製至 {}".format(os.path.join(dir, train_dir)))
     # valid image
     for fn in valid_sub:
         for sub_n in image_format:
             target_f = fn + f'.{sub_n}'
-            if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=valid_image_dir)
-    print("已將 valid image子集 檔案複製至 {}".format(valid_image_dir))
-    # valid label
-    for fn in valid_sub:
+            full_path = os.path.join(dir, target_f)
+            if os.path.isfile(full_path):
+                shutil.copy2(src=full_path, dst=valid_image_dir)
+                print_logger("'{}' -- copy2 --> '{}'".format(full_path, valid_image_dir))
         for sub_n in labels_format:
             target_f = fn + f'.{sub_n}'
-            if os.path.isfile(target_f):
-                shutil.copy2(src=target_f, dst=valid_labels_dir)
-    print("已將 valid label子集 檔案複製至 {}".format(valid_labels_dir))
+            full_path = os.path.join(dir, target_f)
+            if os.path.isfile(full_path):
+                shutil.copy2(src=full_path, dst=valid_labels_dir)
+                print_logger("'{}' -- copy2 --> '{}'".format(full_path, valid_labels_dir))
+    print("已將 valid 子集 複製至 {}".format(os.path.join(dir, valid_dir)))
 
+
+def NOTHING(*args):
+    pass
 
 def get_image_filenames(dir, format=['png', 'jpeg', 'jpg'], full_path=True):
     flatten = lambda dl: [e for sub in dl for e in sub]
@@ -307,8 +325,21 @@ def write_label_and_image2(img_save_path, image, fn, bbs, logger):
     with open(os.path.join(logger.get_log_dir(), fn+'.txt'), 'w') as fp:
         fp.writelines(tmp_xywh)
 
+
+def command_gen(aug_number, **args):
+    command = "python train.py"
+    for key, val in args.items():
+        if key == 'name':
+            val = val + str(aug_number) + '_e{}'.format(args['epochs'])
+        command = command + ' --{} '.format(key.replace('_', '-')) + str(val)
+    return command
+
+
 if __name__ == "__main__":
 
-    show_bbox_on_image('')
+    print(command_gen(aug_number=10, epochs=300, name='aug',
+                data="train_my_qr.yaml",
+                cfg="yolov5s.yaml",
+                batch_size=96))
 
 
