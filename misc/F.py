@@ -16,7 +16,7 @@ import math
 
 
 def dataset_split(dir, train=0.7, valid=0.3, image_format=['png', 'jpeg', 'jpg'],
-                  labels_format=['txt'], train_dir='train', valid_dir='vaild',
+                  labels_format=['txt'], train_dir='train', valid_dir='valid',
                   args=None, _logger=None):
     # train
     train_subset_dir = os.path.join(dir, train_dir)
@@ -341,5 +341,6 @@ if __name__ == "__main__":
                 data="train_my_qr.yaml",
                 cfg="yolov5s.yaml",
                 batch_size=96))
+    # python train.py --epochs 300 --name aug100_e300 --data train_my_qr.yaml --cfg yolov5s.yaml --batch-size 96
 
 
