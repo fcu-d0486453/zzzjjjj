@@ -342,4 +342,6 @@ if __name__ == "__main__":
                 cfg="yolov5s.yaml",
                 batch_size=96))
 
+    # python train.py --epochs 600 --name aug1000_e600 --data train_my_qr.yaml --cfg yolov5s.yaml --batch-size 96
+
 
