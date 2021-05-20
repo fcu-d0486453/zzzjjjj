@@ -58,7 +58,7 @@ if __name__ == "__main__":
         fn_list = F.get_image_filenames(args.img_path, full_path=False)
         enhancer = ImEnhance()
 
-        pbar = tqdm(['qr_0005'])  #  ['qr_0005']
+        pbar = tqdm(fn_list)  #  ['qr_0005']
         for fn in pbar:  # ['qr_0009', 'qr_0010']:  # fn_list
             for idx in range(args.number):  # 單張圖片的強化數量
                 label_x = label_reader[fn]
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                     rd = params['rotation']  # 取得選轉角度
                     img_aug_path = os.path.join(logger.get_log_dir(), show_augment_dir_name, f'{fn}_r_{rd}.jpg')
                     imageio.imsave(img_aug_path, im=image_after_aug)
-                F.write_label_and_image2(im_path, image_aug, rename_fn, bbs_aug, logger)
+                F.write_label_and_image2(im_path, image_aug, rename_fn, bbs_aug, logger, allow_negative=False)
             logger.info("{} argument complete!".format(rename_fn))
 
         F.dataset_split(logger.get_log_dir(), _logger=logger)
