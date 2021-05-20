@@ -344,12 +344,70 @@ def command_gen(aug_number, **args):
     return command
 
 
-if __name__ == "__main__":
+def check_line_be_than(line, val=0, sep=' '):
+    """
+    :param line: yolo 格式的 label，一個row。
+    :param val: 一般來說都要 > 0。
+    :param sep: 用什麼符號分隔，一般來說是 空白
+    :return: 告訴你此行有無負號。
+    """
+    line = line.rstrip('\n')
+    bbox = [float(_) for _ in line.split(sep)[1:]]  # 略過首項(class)
 
-    print(command_gen(aug_number=10, epochs=300, name='aug',
-                data="train_my_qr.yaml",
-                cfg="yolov5s.yaml",
-                batch_size=96))
+    for i, b in enumerate(bbox):
+        if b >= val:
+            bbox[i] = True
+        else:
+            bbox[i] = False
+
+    return np.all(bbox)
+
+
+def just_get_file_name(file_name):
+    """
+    :param file_name: 完整路徑的路徑，通常代表一個檔案，只是是完整路徑。
+    :return: 返還檔案名(包含副檔名)。
+    """
+    sep = os.path.sep
+    return file_name[file_name.rfind(sep)+1:]
+
+
+def remove_negative_bbox(label_pth, re_dir=False, file_type='txt', fn_ptn='qr*', sep=' '):
+    save_path = label_pth
+    total_cnt = 0
+    if re_dir:
+        save_path = os.path.join(label_pth, 'remake_labels')
+        ensure_folder(save_path)
+    fnumber = len(glob(os.path.join(label_pth, fn_ptn+'.'+file_type)))
+    for fpfn in glob(os.path.join(label_pth, fn_ptn+'.'+file_type)):
+        new_lines = []
+        remove_cnt = 0
+        with open(fpfn, mode='r') as fp:
+            lines = fp.readlines()
+            for line in lines:
+                if check_line_be_than(line):  # 是否均 >= 0。
+                    new_lines.append(line)
+                else:
+                    remove_cnt += 1
+
+        fn = os.path.join(save_path, just_get_file_name(fpfn))
+        with open(fn, mode='w') as fp:
+            fp.writelines(new_lines)
+            print(f"rewrite OK (remove {remove_cnt} line(s)): {fn}")
+
+        if remove_cnt > 0:
+            total_cnt += 1
+
+    print(f"\ntotal modified file: {total_cnt} file(s) / {fnumber} files.\n")
+
+
+if __name__ == "__main__":
+    remove_negative_bbox(r"D:\git-repo\ZhangJiaPJ\log_XD\20210520_2206")
+
+    # print(command_gen(aug_number=10, epochs=300, name='aug',
+    #             data="train_my_qr.yaml",
+    #             cfg="yolov5s.yaml",
+    #             batch_size=96))
     # python train.py --epochs 300 --name aug100_e300 --data train_my_qr.yaml --cfg yolov5s.yaml --batch-size 96
 
     # python train.py --epochs 600 --name aug1000_e600 --data train_my_qr.yaml --cfg yolov5s.yaml --batch-size 96
