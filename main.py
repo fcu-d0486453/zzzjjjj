@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--label_path', type=str, default=r'./data/label-qr-code', help='標記檔的資料夾')
 parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
-parser.add_argument('--number', type=int, default=100, help="將一張圖強化幾次")
+parser.add_argument('--number', type=int, default=10, help="將一張圖強化幾次")
 parser.add_argument('--channel-check', action='store_true', help="當 img_path 內的圖片有可能出現alpha通道時，會先處理該folder內的所有圖片。")
 parser.add_argument('--verbose', action='store_true', help="印出一堆訊息")
 parser.add_argument('--show_augment', action='store_true', help="強化的結果印在圖片上")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         fn_list = F.get_image_filenames(args.img_path, full_path=False)
         enhancer = ImEnhance()
 
-        pbar = tqdm(fn_list)
+        pbar = tqdm(['qr_0005'])  #  ['qr_0005']
         for fn in pbar:  # ['qr_0009', 'qr_0010']:  # fn_list
             for idx in range(args.number):  # 單張圖片的強化數量
                 label_x = label_reader[fn]

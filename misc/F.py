@@ -271,7 +271,7 @@ def get_BoundingBoxes(bboxeslist):
         # x1,x2, y1,y2 ,  VOC Pascal is (x1,y1,x2,y2)
 
         x1, x2, y1, y2 = float(bbox[0]), float(bbox[2]), float(bbox[1]), float(bbox[3])
-        res.append(BoundingBox(x1=x1, x2=x2, y1=y1, y2=y2))
+        res.append(BoundingBox(x1=x1, x2=x2, y1=y1, y2=y2, label=None))
     return res
 
 
@@ -302,7 +302,7 @@ def ensure_folder(folder_path, remake=False, logger=None):
 def xyxy2xywh(xyxy, w, h):
     assert len(xyxy) == 4
     xywh = []
-    xmin, ymin, xmax, ymax = xyxy[0],xyxy[1],xyxy[2],xyxy[3],
+    xmin, ymin, xmax, ymax = xyxy[0], xyxy[1], xyxy[2], xyxy[3]
 
     xc = (xmin + xmax) / 2 * (1 / w)
     yc = (ymin + ymax) / 2 * (1 / h)
@@ -312,19 +312,28 @@ def xyxy2xywh(xyxy, w, h):
     return [xc, yc, ww, hh]
 
 
-def write_label_and_image2(img_save_path, image, fn, bbs, logger):
+def write_label_and_image2(img_save_path, image, fn, bbs, logger, allow_negative=False):
     imageio.imsave(img_save_path, image)
     w, h = image.shape[1::-1]
     logger.info(f"Image '{img_save_path}' saved.")
     tmp_xywh = []
     for bb in bbs:
         xywh = xyxy2xywh([bb.x1_int, bb.y1_int, bb.x2_int, bb.y2_int], w, h)
-        xywh = ['{:.6f}'.format(n) for n in xywh]
-        tmp_xywh.append("0 " + " ".join(xywh)+'\n')
+        if allow_negative or bbox_not_negative(xywh):
+            xywh = ['{:.6f}'.format(n) for n in xywh]
+            tmp_xywh.append("0 " + " ".join(xywh)+'\n')
+        else:
+            pass
 
     with open(os.path.join(logger.get_log_dir(), fn+'.txt'), 'w') as fp:
         fp.writelines(tmp_xywh)
 
+
+def bbox_not_negative(bbox):
+    for val in bbox:
+        if val < 0:
+            return False
+    return True
 
 def command_gen(aug_number, **args):
     command = "python train.py"
