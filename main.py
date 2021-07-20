@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--label_path', type=str, default=r'./data/label-qr-code', help='標記檔的資料夾')
 parser.add_argument('--img_path', type=str, default=r'./data/raw_qr', help='原始QRCODE的資料夾')
-parser.add_argument('--number', type=int, default=10, help="將一張圖強化幾次")
+parser.add_argument('--number', type=int, default=3, help="將一張圖強化幾次")
 parser.add_argument('--channel-check', action='store_true', help="當 img_path 內的圖片有可能出現alpha通道時，會先處理該folder內的所有圖片。")
 parser.add_argument('--verbose', action='store_true', help="印出一堆訊息")
 parser.add_argument('--show_augment', action='store_true', help="強化的結果印在圖片上")
