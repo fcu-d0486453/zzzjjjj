@@ -25,7 +25,7 @@ class ImEnhance:
         _887 = self.pick  # useless
         self.enhance_event = [
             iaa.Affine(name='rotation', rotate=randint(-10, 10)),  # 隨機旋轉 A~B
-            iaa.Affine(shear=(-16, 16)),  # Shear, 剪力
+            iaa.Affine(shear=(-16, 16)),  # Shear, 剪力 ,Shear mapping
             iaa.Affine(translate_percent={"x": -0.20}, mode=imgaug.ALL, cval=(0, 255)),
             iaa.Multiply((0.5, 1.5)),  # 對整張圖隨機乘 A~B 之間的值
             iaa.MultiplyElementwise((0.5, 1.5)),  # element-wise 隨機乘 A~B 之間的值
