@@ -14,6 +14,13 @@ class YoloLabelReader:
         self._image = None
         self._current_label_list = None
 
+    def __len__(self):
+        l = len(glob(self.label_dir))
+        i = len(glob(self.image_dir))
+        if l != i:
+            print(f"warn : label資料夾資料量: {l}, image資料量: {i}.")
+        return l
+
     def __getitem__(self, fn):
         lfn = os.path.join(self.label_dir, fn+'.txt')
         if not os.path.isfile(lfn):
